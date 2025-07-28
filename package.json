@@ -1,0 +1,15 @@
+{
+  "name": "logo-processor-api",
+  "version": "1.0.0",
+  "description": "Logo processor API for Draper.vc",
+  "main": "api/process-logo.js",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "sharp": "^0.33.0",
+    "potrace": "^2.1.8",
+    "form-data": "^4.0.0"
+  }
+}
