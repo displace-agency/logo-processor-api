@@ -38,24 +38,36 @@ module.exports = async (req, res) => {
       responseType: 'arraybuffer'
     });
 
-    // Step 2: Process the image with Sharp
+    // Step 2: Process the image with Sharp - prepare for better vectorization
     const processedBuffer = await sharp(Buffer.from(removeBgResponse.data))
-      .resize(50, 50, { 
+      .resize(200, 200, { 
         fit: 'inside',
-        background: { r: 0, g: 0, b: 0, alpha: 0 }
+        background: { r: 255, g: 255, b: 255, alpha: 0 }
       })
+      .greyscale() // Convert to greyscale for better tracing
+      .normalise() // Enhance contrast
       .png()
       .toBuffer();
 
-    // Step 3: Convert to SVG using Potrace
+    // Step 3: Convert to SVG using Potrace with optimized settings
     const svg = await new Promise((resolve, reject) => {
       potrace.trace(processedBuffer, {
         color: '#D2D7EB',
-        threshold: 128,
+        threshold: 100, // Lower threshold for more detail
+        blackOnWhite: false,
+        turdSize: 2, // Smaller = more detail
+        optTolerance: 0.2, // Lower = more accurate
         background: 'transparent'
       }, (err, svg) => {
         if (err) reject(err);
-        else resolve(svg);
+        else {
+          // Post-process SVG to resize to 50px
+          const scaledSvg = svg.replace(
+            /<svg[^>]*>/,
+            '<svg width="50" height="50" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'
+          );
+          resolve(scaledSvg);
+        }
       });
     });
 
