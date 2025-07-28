@@ -25,15 +25,15 @@ module.exports = async (req, res) => {
       console.error('REMOVEBG_API_KEY is not set');
       return res.status(500).json({ 
         success: false, 
-        error: 'Remove.bg API key is not configured. Please add REMOVEBG_API_KEY to your environment variables.' 
+        error: 'Remove.bg API key is not configured.' 
       });
     }
 
-    if (!process.env.VECTORIZER_API_KEY) {
-      console.error('VECTORIZER_API_KEY is not set');
+    if (!process.env.VECTORIZER_API_ID || !process.env.VECTORIZER_API_SECRET) {
+      console.error('Vectorizer.ai credentials are not set');
       return res.status(500).json({ 
         success: false, 
-        error: 'Vectorizer.ai API key is not configured. Please add VECTORIZER_API_KEY to your environment variables.' 
+        error: 'Vectorizer.ai credentials are not configured. Please add VECTORIZER_API_ID and VECTORIZER_API_SECRET.' 
       });
     }
 
@@ -62,7 +62,7 @@ module.exports = async (req, res) => {
     console.log('Remove.bg response received, size:', removeBgResponse.data.length);
     const cleanedBuffer = Buffer.from(removeBgResponse.data);
 
-    // Step 2: Resize image to max 50px before vectorization (saves API credits)
+    // Step 2: Resize image to max 50px before vectorization
     console.log('Resizing image...');
     const resizedBuffer = await sharp(cleanedBuffer)
       .resize(50, 50, { 
@@ -74,21 +74,23 @@ module.exports = async (req, res) => {
 
     console.log('Resized buffer size:', resizedBuffer.length);
 
-    // Step 3: Convert to SVG using Vectorizer.ai
+    // Step 3: Convert to SVG using Vectorizer.ai with Basic Auth
     console.log('Calling Vectorizer.ai API...');
     const vectorizerFormData = new FormData();
     vectorizerFormData.append('image', resizedBuffer, 'logo.png');
     
-    // Vectorizer.ai settings for best logo results
+    // Vectorizer.ai settings
     vectorizerFormData.append('mode', 'production');
     vectorizerFormData.append('output.file_format', 'svg');
     vectorizerFormData.append('output.size.unit', 'px');
     vectorizerFormData.append('output.size.width', '50');
     vectorizerFormData.append('output.size.height', '50');
-    vectorizerFormData.append('processing.max_colors', '2'); // Limit colors for cleaner result
-    vectorizerFormData.append('processing.min_area', '5'); // Remove tiny details
-    vectorizerFormData.append('processing.simplify', '3'); // Simplify paths
-    vectorizerFormData.append('processing.anti_aliased', 'auto');
+    vectorizerFormData.append('processing.max_colors', '2');
+    vectorizerFormData.append('processing.min_area', '5');
+    vectorizerFormData.append('processing.simplify', '3');
+
+    // Create Basic Auth header
+    const auth = Buffer.from(`${process.env.VECTORIZER_API_ID}:${process.env.VECTORIZER_API_SECRET}`).toString('base64');
 
     const vectorizerResponse = await axios({
       method: 'post',
@@ -96,7 +98,7 @@ module.exports = async (req, res) => {
       data: vectorizerFormData,
       headers: {
         ...vectorizerFormData.getHeaders(),
-        'Authorization': `Bearer ${process.env.VECTORIZER_API_KEY}`,
+        'Authorization': `Basic ${auth}`,
       },
       responseType: 'text'
     });
@@ -109,8 +111,8 @@ module.exports = async (req, res) => {
     svg = svg
       .replace(/fill="[^"]*"/g, `fill="#D2D7EB"`)
       .replace(/stroke="[^"]*"/g, `stroke="#D2D7EB"`)
-      .replace(/style="[^"]*"/g, '') // Remove inline styles that might override
-      .replace(/<svg([^>]*)>/, '<svg$1 fill="#D2D7EB">'); // Add default fill
+      .replace(/style="[^"]*"/g, '') 
+      .replace(/<svg([^>]*)>/, '<svg$1 fill="#D2D7EB">');
 
     // Ensure proper dimensions
     if (!svg.includes('width="50"')) {
@@ -132,15 +134,13 @@ module.exports = async (req, res) => {
     // Detailed error messages
     let errorMessage = 'Failed to process image.';
     if (error.response?.status === 401) {
-      errorMessage = 'API authentication failed. Please check your API keys.';
+      errorMessage = 'API authentication failed. Please check your API credentials.';
     } else if (error.response?.status === 403) {
-      errorMessage = 'API access forbidden. Please check your API subscription and keys.';
+      errorMessage = 'API access forbidden. Please check your subscription.';
     } else if (error.response?.status === 429) {
       errorMessage = 'API rate limit exceeded. Please try again later.';
     } else if (error.response?.status === 400) {
       errorMessage = 'Bad request. The image may be corrupted or in an unsupported format.';
-    } else if (error.response?.data?.message) {
-      errorMessage = error.response.data.message;
     } else if (error.response?.data?.error) {
       errorMessage = error.response.data.error;
     } else if (error.message) {
