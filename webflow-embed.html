@@ -58,13 +58,7 @@
 }
 
 .lp-file-input {
-    position: absolute;
-    opacity: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-    top: 0;
-    left: 0;
+    display: none;
 }
 
 .lp-status {
@@ -191,8 +185,8 @@
             </svg>
             <div class="lp-upload-text">Drop your logo here or click to upload</div>
             <div class="lp-upload-subtext">Supports JPEG and PNG files</div>
-            <input type="file" id="lpFileInput" class="lp-file-input" accept="image/jpeg,image/jpg,image/png">
         </div>
+        <input type="file" id="lpFileInput" class="lp-file-input" accept="image/jpeg,image/jpg,image/png" style="display: none;">
     </div>
 
     <div class="lp-status" id="lpStatus">
@@ -242,8 +236,15 @@ const API_URL = 'YOUR_VERCEL_URL_HERE/api/process-logo';
     let processedSVG = null;
 
     // Setup event listeners
-    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        fileInput.click();
+    });
     fileInput.addEventListener('change', handleFileSelect);
+    fileInput.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
     uploadArea.addEventListener('dragover', handleDragOver);
     uploadArea.addEventListener('dragleave', handleDragLeave);
     uploadArea.addEventListener('drop', handleDrop);
@@ -325,6 +326,7 @@ const API_URL = 'YOUR_VERCEL_URL_HERE/api/process-logo';
             } catch (error) {
                 showError('Failed to process image. Please try again.');
                 statusDiv.style.display = 'none';
+                console.error('Error:', error);
             }
         };
         reader.readAsDataURL(file);
