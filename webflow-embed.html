@@ -1,0 +1,362 @@
+<!-- Copy this entire code into a Webflow Embed element -->
+<!-- IMPORTANT: Replace YOUR_VERCEL_URL_HERE with your actual Vercel deployment URL -->
+
+<style>
+/* Logo Processor Styles */
+.logo-processor-wrapper {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.lp-upload-section {
+    background-color: #fdfdfd;
+    border-radius: 8px;
+    padding: 48px;
+    box-shadow: 0 2px 8px rgba(1, 1, 2, 0.1);
+    margin-bottom: 32px;
+}
+
+.lp-upload-area {
+    border: 2px dashed #a8acbc;
+    border-radius: 8px;
+    padding: 48px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background-color: #fdfdfd;
+    position: relative;
+}
+
+.lp-upload-area:hover {
+    border-color: #242e5d;
+    background-color: rgba(36, 46, 93, 0.02);
+}
+
+.lp-upload-area.dragover {
+    border-color: #242e5d;
+    background-color: rgba(36, 46, 93, 0.05);
+}
+
+.lp-upload-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+    display: block;
+}
+
+.lp-upload-text {
+    font-size: 16px;
+    color: #3f4046;
+    margin-bottom: 8px;
+}
+
+.lp-upload-subtext {
+    font-size: 14px;
+    color: #a8acbc;
+}
+
+.lp-file-input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+}
+
+.lp-status {
+    background-color: #fdfdfd;
+    border-radius: 8px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(1, 1, 2, 0.1);
+    margin-bottom: 32px;
+    display: none;
+}
+
+.lp-status-text {
+    font-size: 16px;
+    color: #3f4046;
+    text-align: center;
+}
+
+.lp-results {
+    background-color: #fdfdfd;
+    border-radius: 8px;
+    padding: 48px;
+    box-shadow: 0 2px 8px rgba(1, 1, 2, 0.1);
+    display: none;
+}
+
+.lp-preview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-bottom: 32px;
+}
+
+@media (max-width: 768px) {
+    .lp-preview-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.lp-preview-item {
+    text-align: center;
+}
+
+.lp-preview-label {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #a8acbc;
+    margin-bottom: 16px;
+}
+
+.lp-preview-box {
+    background-color: #f8f8f8;
+    border: 1px solid #d3d5de;
+    border-radius: 8px;
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+}
+
+.lp-preview-box img {
+    max-width: 100%;
+    max-height: 150px;
+    object-fit: contain;
+}
+
+.lp-button {
+    background-color: #242e5d;
+    color: #ffffff;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+}
+
+.lp-button:hover {
+    background-color: #1c244a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(36, 46, 93, 0.2);
+}
+
+.lp-button-secondary {
+    background-color: transparent;
+    color: #3f4046;
+    border: 1px solid #d3d5de;
+    margin-top: 16px;
+}
+
+.lp-button-secondary:hover {
+    border-color: #a8acbc;
+    background-color: rgba(211, 213, 222, 0.1);
+}
+
+.lp-error {
+    background-color: rgba(179, 38, 30, 0.1);
+    border: 1px solid rgba(179, 38, 30, 0.2);
+    color: #b3261e;
+    padding: 16px;
+    border-radius: 4px;
+    margin-top: 16px;
+    font-size: 14px;
+    display: none;
+}
+</style>
+
+<div class="logo-processor-wrapper" id="logoProcessor">
+    <div class="lp-upload-section">
+        <div class="lp-upload-area" id="lpUploadArea">
+            <svg class="lp-upload-icon" viewBox="0 0 24 24" fill="none" stroke="#a8acbc" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <div class="lp-upload-text">Drop your logo here or click to upload</div>
+            <div class="lp-upload-subtext">Supports JPEG and PNG files</div>
+            <input type="file" id="lpFileInput" class="lp-file-input" accept="image/jpeg,image/jpg,image/png">
+        </div>
+    </div>
+
+    <div class="lp-status" id="lpStatus">
+        <div class="lp-status-text">Processing your logo... This may take a few seconds.</div>
+    </div>
+
+    <div class="lp-results" id="lpResults">
+        <div class="lp-preview-grid">
+            <div class="lp-preview-item">
+                <div class="lp-preview-label">Original</div>
+                <div class="lp-preview-box">
+                    <img id="lpOriginalPreview" src="" alt="Original logo">
+                </div>
+            </div>
+            <div class="lp-preview-item">
+                <div class="lp-preview-label">Processed</div>
+                <div class="lp-preview-box" id="lpProcessedPreview">
+                    <!-- Processed logo will appear here -->
+                </div>
+            </div>
+        </div>
+
+        <button class="lp-button" id="lpDownloadBtn">Download SVG</button>
+        <button class="lp-button lp-button-secondary" id="lpResetBtn">Process Another Logo</button>
+    </div>
+
+    <div class="lp-error" id="lpError"></div>
+</div>
+
+<script>
+// IMPORTANT: Replace this with your actual API URL from Vercel
+const API_URL = 'YOUR_VERCEL_URL_HERE/api/process-logo';
+
+// Logo Processor Code
+(function() {
+    // Get elements
+    const uploadArea = document.getElementById('lpUploadArea');
+    const fileInput = document.getElementById('lpFileInput');
+    const statusDiv = document.getElementById('lpStatus');
+    const resultsDiv = document.getElementById('lpResults');
+    const errorDiv = document.getElementById('lpError');
+    const originalPreview = document.getElementById('lpOriginalPreview');
+    const processedPreview = document.getElementById('lpProcessedPreview');
+    const downloadBtn = document.getElementById('lpDownloadBtn');
+    const resetBtn = document.getElementById('lpResetBtn');
+
+    let processedSVG = null;
+
+    // Setup event listeners
+    uploadArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFileSelect);
+    uploadArea.addEventListener('dragover', handleDragOver);
+    uploadArea.addEventListener('dragleave', handleDragLeave);
+    uploadArea.addEventListener('drop', handleDrop);
+    downloadBtn.addEventListener('click', downloadSVG);
+    resetBtn.addEventListener('click', reset);
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    }
+
+    function handleDragLeave(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            processFile(files[0]);
+        }
+    }
+
+    function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (file) {
+            processFile(file);
+        }
+    }
+
+    async function processFile(file) {
+        // Check file type
+        if (!file.type.match(/image\/(jpeg|jpg|png)/)) {
+            showError('Please upload a JPEG or PNG file.');
+            return;
+        }
+
+        // Check file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+            showError('File size must be less than 5MB.');
+            return;
+        }
+
+        // Show loading
+        hideError();
+        statusDiv.style.display = 'block';
+        resultsDiv.style.display = 'none';
+
+        // Read file
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                // Show original preview
+                originalPreview.src = e.target.result;
+
+                // Send to API
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image: e.target.result
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    processedSVG = data.svg;
+                    processedPreview.innerHTML = data.svg;
+                    statusDiv.style.display = 'none';
+                    resultsDiv.style.display = 'block';
+                } else {
+                    throw new Error(data.error || 'Processing failed');
+                }
+            } catch (error) {
+                showError('Failed to process image. Please try again.');
+                statusDiv.style.display = 'none';
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function downloadSVG() {
+        if (!processedSVG) return;
+        
+        const blob = new Blob([processedSVG], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'logo-processed.svg';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function reset() {
+        fileInput.value = '';
+        statusDiv.style.display = 'none';
+        resultsDiv.style.display = 'none';
+        hideError();
+        processedSVG = null;
+    }
+
+    function showError(message) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+
+    function hideError() {
+        errorDiv.style.display = 'none';
+    }
+})();
+</script>
